@@ -19,3 +19,24 @@ seed = "0x1"
 runs = 256
 depth = 128
 fail_on_revert = false
+
+[profile.ci]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc = "0.8.27"
+optimizer = true
+optimizer_runs = 200
+
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "forge-std/=lib/forge-std/src/",
+]
+
+[profile.ci.fuzz]
+runs = 256          # CI da tezroq — local da 1000
+
+[profile.ci.invariant]
+runs = 64
+depth = 64
+fail_on_revert = false
