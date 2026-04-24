@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Azeret+Mono:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-mono: 'Azeret Mono', monospace;
+  --font-display: 'Instrument Serif', serif;
+
+  --bg: #09090B;
+  --bg-card: #111113;
+  --bg-elevated: #18181B;
+  --bg-border: #27272A;
+  --text-primary: #FAFAFA;
+  --text-secondary: #A1A1AA;
+  --text-dim: #52525B;
+
+  --amber: #F59E0B;
+  --amber-dim: #78350F;
+  --cyan: #22D3EE;
+  --emerald: #10B981;
+  --rose: #F43F5E;
+  --violet: #8B5CF6;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 2px; }
+
+/* Selection */
+::selection { background: rgba(245,158,11,0.25); color: var(--text-primary); }
+
+/* Focus */
+*:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Glow utilities */
+@layer utilities {
+  .glow-amber {
+    box-shadow: 0 0 20px rgba(245,158,11,0.15), 0 0 60px rgba(245,158,11,0.05);
+  }
+  .glow-emerald {
+    box-shadow: 0 0 20px rgba(16,185,129,0.15);
+  }
+  .text-gradient-amber {
+    background: linear-gradient(135deg, #F59E0B, #FCD34D);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .border-gradient {
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+  }
+  .card-hover {
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+  .card-hover:hover {
+    border-color: rgba(245,158,11,0.3);
+    box-shadow: 0 0 30px rgba(245,158,11,0.08);
+    transform: translateY(-1px);
+  }
+}
+
+/* Number inputs */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
