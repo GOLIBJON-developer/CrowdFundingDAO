@@ -6,7 +6,8 @@ import { useGetCampaigns } from '@/hooks/useFactory'
 import { useMyTokenInfo } from '@/hooks/useFundToken'
 import { useDelegate } from '@/hooks/useFundToken'
 import { useReadContracts } from 'wagmi'
-import CrowdfundingCampaignABI from '@/abi/CrowdfundingCampaign.json' assert { type: 'json' }
+import { type Abi } from 'viem'
+import CrowdfundingCampaignABI from '@/abi/CrowdfundingCampaign.json'
 import { CampaignCard } from '@/components/campaign'
 import { AddressChip, TxFeedback, Spinner, ConnectButton } from '@/components/ui'
 import { fmtEth } from '@/lib/utils'
@@ -29,7 +30,7 @@ export default function PortfolioPage() {
   // Read my contribution from each campaign
   const contribContracts = allAddresses.map((addr) => ({
     address: addr,
-    abi: CrowdfundingCampaignABI,
+    abi: CrowdfundingCampaignABI as Abi,
     functionName: 's_contributions' as const,
     args: address ? [address] : [],
   }))
