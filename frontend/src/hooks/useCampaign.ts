@@ -5,7 +5,7 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from 'wagmi'
-import { parseEther } from 'viem'
+import { parseEther, type Abi } from 'viem'
 import { useQueryClient } from '@tanstack/react-query'
 import CrowdfundingCampaignABI from '@/abi/CrowdfundingCampaign.json'
 import { parseCampaignInfo, type CampaignInfo } from '@/lib/utils'
@@ -13,7 +13,7 @@ import { parseCampaignInfo, type CampaignInfo } from '@/lib/utils'
 // ─── Campaign contract helper ─────────────────────────────────────────────────
 const campaignContract = (address: `0x${string}`) => ({
   address,
-  abi: CrowdfundingCampaignABI,
+  abi: CrowdfundingCampaignABI as Abi,
 })
 
 // ─── Read: full campaign info ─────────────────────────────────────────────────

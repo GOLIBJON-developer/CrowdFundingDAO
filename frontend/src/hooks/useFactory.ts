@@ -5,13 +5,13 @@ import {
   useWaitForTransactionReceipt,
   useReadContracts,
 } from 'wagmi'
-import { parseEther } from 'viem'
 import { ADDRESSES } from '@/lib/constants'
+import { parseEther, type Abi } from 'viem'
 import CampaignFactoryABI from '@/abi/CampaignFactory.json'
 import CrowdfundingCampaignABI from '@/abi/CrowdfundingCampaign.json'
 import { parseCampaignInfo, type CampaignInfo } from '@/lib/utils'
 
-const FACTORY = { address: ADDRESSES.factory, abi: CampaignFactoryABI } as const
+const FACTORY = { address: ADDRESSES.factory, abi: CampaignFactoryABI as Abi } as const
 
 // ─── Read: all campaign addresses ────────────────────────────────────────────
 export function useGetCampaigns() {
@@ -89,7 +89,7 @@ export function useCreateCampaign() {
 export function useCampaignInfoBulk(addresses: `0x${string}`[]) {
   const contracts = addresses.map((address) => ({
     address,
-    abi: CrowdfundingCampaignABI,
+    abi: CrowdfundingCampaignABI as Abi,
     functionName: 'getCampaignInfo' as const,
   }))
 
