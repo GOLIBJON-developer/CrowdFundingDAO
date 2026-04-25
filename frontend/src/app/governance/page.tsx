@@ -38,7 +38,8 @@ export default function GovernancePage() {
   const { data: propStateRaw } = useProposalState(lookedUpId)
   const propState = propStateRaw as number | undefined  // ← bir marta cast
   const { data: propVotes } = useProposalVotes(lookedUpId)
-  const { data: hasVoted } = useHasVoted(lookedUpId, address)
+  const { data: hasVotedRaw } = useHasVoted(lookedUpId, address)
+  const hasVoted = hasVotedRaw as boolean | undefined
   const castVote = useCastVote()
 
   const isSelfDelegated = address && delegatee?.toLowerCase() === address.toLowerCase()
