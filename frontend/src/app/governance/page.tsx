@@ -8,7 +8,7 @@ import {
   useHasVoted,
   useCastVote,
   usePropose,
-} from '@/hooks/useGovernance'
+} from '@/hooks/UseGovernance'
 import { useMyTokenInfo } from '@/hooks/useFundToken'
 import { useDelegate } from '@/hooks/useFundToken'
 import { ProposalStateBadge, TxFeedback, Spinner, ConnectButton } from '@/components/ui'
@@ -19,7 +19,9 @@ const DEMO_PROPOSAL_IDS: bigint[] = []
 
 export default function GovernancePage() {
   const { address } = useAccount()
-  const { balance, votes, delegatee } = useMyTokenInfo(address)
+  const { balance: balanceRaw, votes: votesRaw, delegatee } = useMyTokenInfo(address)
+    const balance = (balanceRaw ?? 0n) as bigint
+    const votes   = (votesRaw   ?? 0n) as bigint
   const { votingDelay, votingPeriod, threshold, quorumNum } = useGovernorSettings()
   const delegateHook = useDelegate()
   const proposeHook = usePropose()
@@ -33,14 +35,15 @@ export default function GovernancePage() {
   const [propType, setPropType] = useState<'fee' | 'cancel'>('fee')
   const [voteReason, setVoteReason] = useState('')
 
-  const { data: propState } = useProposalState(lookedUpId)
+  const { data: propStateRaw } = useProposalState(lookedUpId)
+  const propState = propStateRaw as number | undefined  // ← bir marta cast
   const { data: propVotes } = useProposalVotes(lookedUpId)
   const { data: hasVoted } = useHasVoted(lookedUpId, address)
   const castVote = useCastVote()
 
   const isSelfDelegated = address && delegatee?.toLowerCase() === address.toLowerCase()
-  const hasVotingPower = votes > 0n
-  const hasEnoughToPropose = threshold.data !== undefined && votes >= (threshold.data as bigint)
+  const hasVotingPower = (votes as bigint) > 0n
+  const hasEnoughToPropose = threshold.data !== undefined && (votes as bigint) >= (threshold.data as bigint)
 
   const fmtDuration = (secs?: bigint) => {
     if (!secs) return '—'
@@ -49,6 +52,12 @@ export default function GovernancePage() {
   }
 
   const votesSplit = propVotes as [bigint, bigint, bigint] | undefined
+
+const VOTE_OPTIONS: { label: string; support: 0 | 1 | 2; cls: string }[] = [
+  { label: 'For',     support: 1, cls: 'bg-emerald-600 text-white hover:bg-emerald-500' },
+  { label: 'Against', support: 0, cls: 'bg-rose-600 text-white hover:bg-rose-500' },
+  { label: 'Abstain', support: 2, cls: 'bg-zinc-700 text-zinc-200 hover:bg-zinc-600' },
+]
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
@@ -92,21 +101,21 @@ export default function GovernancePage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded bg-zinc-800/50">
                   <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider mb-1">FUND Balance</div>
-                  <div className="text-lg font-mono font-semibold text-zinc-100">{fmtEth(balance, 2)}</div>
+                  <div className="text-lg font-mono font-semibold text-zinc-100">{fmtEth((balance as bigint), 2)}</div>
                 </div>
                 <div className="p-3 rounded bg-zinc-800/50">
                   <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider mb-1">Vote Weight</div>
                   <div className={`text-lg font-mono font-semibold ${hasVotingPower ? 'text-amber-400' : 'text-zinc-600'}`}>
-                    {fmtEth(votes, 2)}
+                    {fmtEth((votes as bigint), 2)}
                   </div>
                 </div>
               </div>
 
               {/* Delegation */}
-              {balance > 0n && !isSelfDelegated && (
+              {(balance as bigint) > 0n && !isSelfDelegated && (
                 <div className="p-3 rounded border border-amber-500/20 bg-amber-500/5">
                   <p className="text-xs font-mono text-amber-400 mb-2">
-                    ⚠ Delegate to yourself to activate your {fmtEth(balance, 2)} FUND voting power.
+                    ⚠ Delegate to yourself to activate your {fmtEth((balance as bigint), 2)} FUND voting power.
                   </p>
                   <button
                     onClick={() => address && delegateHook.selfDelegate(address)}
@@ -177,16 +186,12 @@ export default function GovernancePage() {
                 )}
 
                 {/* Vote buttons — only when Active (state=1) */}
-                {propState === 1 && address && !hasVoted && (
+                {propState === 1 && address && !hasVoted &&  (
                   <div className="flex gap-2 pt-1">
-                    {([
-                      { label: 'For',     support: 1 as const, cls: 'bg-emerald-600 text-white hover:bg-emerald-500' },
-                      { label: 'Against', support: 0 as const, cls: 'bg-rose-600 text-white hover:bg-rose-500' },
-                      { label: 'Abstain', support: 2 as const, cls: 'bg-zinc-700 text-zinc-200 hover:bg-zinc-600' },
-                    ] as const).map(({ label, support, cls }) => (
+                    {VOTE_OPTIONS.map(({ label, support, cls }) => (
                       <button
                         key={label}
-                        onClick={() => castVote.castVote(lookedUpId, support)}
+                        onClick={() =>  castVote.castVote(lookedUpId, support)}
                         disabled={castVote.isPending || castVote.isConfirming}
                         className={`flex-1 py-1.5 text-xs font-mono font-semibold rounded
                                     transition-colors disabled:opacity-40 ${cls}`}
@@ -324,13 +329,14 @@ export default function GovernancePage() {
           {/* Info box */}
           <div className="p-4 rounded-lg border border-zinc-800/60 bg-zinc-900/20 space-y-2">
             <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider mb-2">Governance Flow</p>
-            {[
+            {([
               ['1', 'propose()', 'Submit a proposal (need ≥ threshold FUND)'],
               ['2', 'Voting delay', 'Wait before voting opens'],
               ['3', 'castVote()', 'Vote FOR / AGAINST / ABSTAIN'],
               ['4', 'queue()', 'If succeeded, queue in Timelock'],
               ['5', 'execute()', 'Execute after timelock delay'],
-            ].map(([step, fn, desc]) => (
+            ] as [string, string, string][]
+            ).map(([step, fn, desc]) => (
               <div key={step} className="flex gap-3 items-start">
                 <span className="text-[10px] font-mono text-zinc-700 w-3 shrink-0">{step}</span>
                 <span className="text-[10px] font-mono text-amber-500/70 w-20 shrink-0">{fn}</span>

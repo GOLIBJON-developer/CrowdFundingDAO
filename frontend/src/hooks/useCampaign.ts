@@ -6,6 +6,7 @@ import {
   useWaitForTransactionReceipt,
 } from 'wagmi'
 import { parseEther } from 'viem'
+import { useQueryClient } from '@tanstack/react-query'
 import CrowdfundingCampaignABI from '@/abi/CrowdfundingCampaign.json'
 import { parseCampaignInfo, type CampaignInfo } from '@/lib/utils'
 
@@ -39,8 +40,9 @@ export function useCampaignStats(address?: `0x${string}`) {
       { ...campaignContract(address!), functionName: 'timeRemaining' },
       { ...campaignContract(address!), functionName: 'isAcceptingContributions' },
       { ...campaignContract(address!), functionName: 's_state' },
+      { ...campaignContract(address!), functionName: 'paused' }, 
     ],
-    query: { enabled: !!address, refetchInterval: 10_000 },
+    query: { enabled: !!address, refetchInterval: 8_000 },
   })
 }
 
@@ -50,14 +52,36 @@ export function useMyContribution(campaignAddress?: `0x${string}`, userAddress?:
     ...campaignContract(campaignAddress!),
     functionName: 's_contributions',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: !!campaignAddress && !!userAddress, refetchInterval: 10_000 },
+    query: { enabled: !!campaignAddress && !!userAddress, refetchInterval: 8_000 },
   })
+}
+
+// ─── Write helper — refetch after tx confirmed ────────────────────────────────
+function useWriteWithRefetch(campaignAddress?: `0x${string}`) {
+  const qc = useQueryClient()
+  const { writeContract, data: hash, isPending, error, reset } = useWriteContract()
+ 
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    onReplaced: () => qc.invalidateQueries(),
+  })
+ 
+  // Invalidate all campaign-related queries on success
+  const { isLoading: _, ...rest } = useWaitForTransactionReceipt({ hash })
+  if (isSuccess) {
+    qc.invalidateQueries()
+  }
+ 
+  return { writeContract, hash, isPending, isConfirming, isSuccess, error, reset }
 }
 
 // ─── Write: contribute ────────────────────────────────────────────────────────
 export function useContribute(campaignAddress?: `0x${string}`) {
+  const qc = useQueryClient()
   const { writeContract, data: hash, isPending, error, reset } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
+
+  if (isSuccess) qc.invalidateQueries()
 
   function contribute(ethAmount: string) {
     if (!campaignAddress) return
@@ -73,8 +97,10 @@ export function useContribute(campaignAddress?: `0x${string}`) {
 
 // ─── Write: finalize ──────────────────────────────────────────────────────────
 export function useFinalize(campaignAddress?: `0x${string}`) {
+  const qc = useQueryClient()
   const { writeContract, data: hash, isPending, error } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
+  if (isSuccess) qc.invalidateQueries()
 
   function finalize() {
     if (!campaignAddress) return
@@ -86,8 +112,10 @@ export function useFinalize(campaignAddress?: `0x${string}`) {
 
 // ─── Write: withdraw ──────────────────────────────────────────────────────────
 export function useWithdraw(campaignAddress?: `0x${string}`) {
+  const qc = useQueryClient()
   const { writeContract, data: hash, isPending, error } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
+  if (isSuccess) qc.invalidateQueries()
 
   function withdraw() {
     if (!campaignAddress) return
@@ -99,8 +127,10 @@ export function useWithdraw(campaignAddress?: `0x${string}`) {
 
 // ─── Write: refund ────────────────────────────────────────────────────────────
 export function useRefund(campaignAddress?: `0x${string}`) {
+  const qc = useQueryClient()
   const { writeContract, data: hash, isPending, error } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
+  if (isSuccess) qc.invalidateQueries()
 
   function refund() {
     if (!campaignAddress) return
@@ -112,8 +142,10 @@ export function useRefund(campaignAddress?: `0x${string}`) {
 
 // ─── Write: cancel ────────────────────────────────────────────────────────────
 export function useCancel(campaignAddress?: `0x${string}`) {
+  const qc = useQueryClient()
   const { writeContract, data: hash, isPending, error } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
+  if (isSuccess) qc.invalidateQueries()
 
   function cancel() {
     if (!campaignAddress) return

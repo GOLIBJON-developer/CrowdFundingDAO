@@ -6,14 +6,16 @@ import { useGetCampaigns } from '@/hooks/useFactory'
 import { useMyTokenInfo } from '@/hooks/useFundToken'
 import { useDelegate } from '@/hooks/useFundToken'
 import { useReadContracts } from 'wagmi'
-import CrowdfundingCampaignABI from '@/abi/CrowdfundingCampaign.json'
+import CrowdfundingCampaignABI from '@/abi/CrowdfundingCampaign.json' assert { type: 'json' }
 import { CampaignCard } from '@/components/campaign'
 import { AddressChip, TxFeedback, Spinner, ConnectButton } from '@/components/ui'
 import { fmtEth } from '@/lib/utils'
 
 export default function PortfolioPage() {
   const { address } = useAccount()
-  const { balance, votes, delegatee, refetch } = useMyTokenInfo(address)
+  const { balance: balanceRaw, votes: votesRaw, delegatee, refetch } = useMyTokenInfo(address)
+  const balance = (balanceRaw ?? 0n) as bigint
+  const votes   = (votesRaw   ?? 0n) as bigint
   const delegateHook = useDelegate()
 
   // My created campaigns

@@ -5,7 +5,8 @@ import { useAccount } from 'wagmi'
 import { useCreateCampaign } from '@/hooks/useFactory'
 import { useFactoryStats } from '@/hooks/useFactory'
 import { TxFeedback, ConnectButton } from '@/components/ui'
-import { fmtFeeBps, MAX_TITLE_LENGTH, MAX_DESCRIPTION_LENGTH } from '@/lib/utils'
+import { MAX_TITLE_LENGTH, MAX_DESCRIPTION_LENGTH } from '@/lib/constants'
+import { fmtFeeBps } from '@/lib/utils'
 import { parseEther } from 'viem'
 
 const DURATION_PRESETS = [

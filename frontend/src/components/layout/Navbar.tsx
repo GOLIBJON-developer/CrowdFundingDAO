@@ -3,10 +3,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAccount } from 'wagmi'
 import { ConnectButton } from '@/components/ui'
-import { cn } from '@/lib/utils'
+import { cn ,fmtEth} from '@/lib/utils'
 import { useMyTokenInfo } from '@/hooks/useFundToken'
-import { fmtEth } from '@/lib/utils'
-
+import { useIsAdmin } from '@/hooks/useAdmin'
 const NAV_LINKS = [
   { href: '/',            label: 'Campaigns' },
   { href: '/create',      label: 'Launch'    },
@@ -18,7 +17,12 @@ export function Navbar() {
   const pathname = usePathname()
   const { address } = useAccount()
   const { balance, votes } = useMyTokenInfo(address)
+  const { hasAnyRole } = useIsAdmin(address)
 
+  const allLinks = [
+    ...NAV_LINKS,
+    ...(hasAnyRole ? [{ href: '/admin', label: 'Admin' }] : []),
+  ] 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-800/60 bg-[#09090B]/90 backdrop-blur-md">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-6">
@@ -37,8 +41,9 @@ export function Navbar() {
 
         {/* Nav */}
         <nav className="flex items-center gap-0.5">
-          {NAV_LINKS.map(({ href, label }) => {
+          {allLinks.map(({ href, label }) => {
             const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
+            const isAdmin = href === '/admin'
             return (
               <Link
                 key={href}
@@ -46,8 +51,12 @@ export function Navbar() {
                 className={cn(
                   'px-3 py-1.5 text-xs font-mono rounded transition-colors',
                   active
-                    ? 'text-amber-400 bg-amber-500/10'
-                    : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50'
+                    ? isAdmin
+                      ? 'text-violet-400 bg-violet-500/10'
+                      : 'text-amber-400 bg-amber-500/10'
+                    : isAdmin
+                      ? 'text-zinc-500 hover:text-violet-300 hover:bg-violet-800/20'
+                      : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50'
                 )}
               >
                 {label}
@@ -58,10 +67,10 @@ export function Navbar() {
 
         {/* Right: token info + wallet */}
         <div className="flex items-center gap-3">
-          {address && balance > 0n && (
+          {address && (balance as bigint) > 0n && (
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800/60 border border-zinc-700/50">
               <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wide">FUND</span>
-              <span className="text-xs font-mono font-semibold text-amber-400">{fmtEth(balance, 2)}</span>
+              <span className="text-xs font-mono font-semibold text-amber-400">{fmtEth((balance as bigint), 2)}</span>
             </div>
           )}
           <ConnectButton />
